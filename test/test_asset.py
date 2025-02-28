@@ -3,6 +3,7 @@ import random
 from dataclasses import dataclass
 from typing import List, Union
 
+import pytest
 import requests
 
 
@@ -122,3 +123,59 @@ class TestCoinCapAPI:
         assert isinstance(asset.supply, Union[None, float])
         assert isinstance(asset.maxSupply, Union[None, float])
         assert isinstance(asset.vwap24Hr, Union[None, float])
+
+    def test_asset_fields(self):
+        """
+        Positive Test: Verifies that assets contain essential fields such as 'id', 'name', 'symbol', etc.
+        """
+        response = requests.get(self.BASE_URL, headers=self.headers)
+        assert response.status_code == 200
+        api_response = self._parse_response(response)
+        # Check that each asset contains the necessary fields
+        for asset in api_response.data:
+            assert hasattr(asset, 'id')
+            assert hasattr(asset, 'name')
+            assert hasattr(asset, 'symbol')
+            assert hasattr(asset, 'priceUsd')
+            assert hasattr(asset, 'marketCapUsd')
+            assert hasattr(asset, 'volumeUsd24Hr')
+            assert hasattr(asset, 'changePercent24Hr')
+            assert hasattr(asset, 'supply')
+            assert hasattr(asset, 'maxSupply')
+            assert hasattr(asset, 'explorer')
+            assert hasattr(asset, 'rank')
+            assert hasattr(asset, 'vwap24Hr')
+
+    def test_ids_parameter_bitcoin(self):
+        """
+        Possitive Test: Verifies the response when using an known Bitcoin ids which will only return Bitcoin information.
+        """
+        params = {'ids': 'bitcoin'}
+        response = requests.get(self.BASE_URL, headers=self.headers, params=params)
+        assert response.status_code == 200
+        api_response = self._parse_response(response)
+        assert len(api_response.data) == 1
+        bitcoint_info: CoinCapAsset = api_response.data[0]
+        assert bitcoint_info.id == 'bitcoin'
+
+    def test_invalid_search_parameter(self):
+        """
+        Negative Test: Verifies the response when using an invalid search parameter.
+        """
+        invalid_search_target = 'invalidassetname'
+        params = {'search': invalid_search_target}
+        response = requests.get(self.BASE_URL, headers=self.headers, params=params)
+        assert response.status_code == 200
+        api_response = self._parse_response(response)
+        assert len(api_response.data) == 0, f'Variable:{invalid_search_target} for testing invalid search name found information, need to update'
+
+    @pytest.mark.parametrize('limit', [1, 10, 100, 1000])
+    def test_limit_parameter(self, limit):
+        """
+        Positive Test: Verifies the API correctly applies the 'limit' parameter to return the correct number of assets.
+        """
+        params = {'limit': limit}  # Requesting a limit of 5 results
+        response = requests.get(self.BASE_URL, headers=self.headers, params=params)
+        assert response.status_code == 200
+        api_response = self._parse_response(response)
+        assert len(api_response.data) == limit, f'Set limit variable:{limit}'
