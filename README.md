@@ -33,6 +33,6 @@ Testing RestAPI with pytest
   * Implementation in Python.
   * (recommendation) Use Pytest parametrize to reduce code but maintain high coverage.
   * A mixture of positive and negative scenarios
-  * Think in framework design and modularity
-  * README should include the test case written for the test in a table form
-  * Description of what validation is been used and why the candidate used this type of validation
+* Think in framework design and modularity
+* README should include the test case written for the test in a table form
+* Description of what validation is been used and why the candidate used this type of validation
