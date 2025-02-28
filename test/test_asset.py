@@ -179,3 +179,36 @@ class TestCoinCapAPI:
         assert response.status_code == 200
         api_response = self._parse_response(response)
         assert len(api_response.data) == limit, f'Set limit variable:{limit}'
+
+    @pytest.mark.parametrize('bound', [0, 2000])
+    def test_limit_parameter_bound(self, bound):
+        """
+        Positive limit Test: Verifies the API 'limit' parameter can return the correct upper bound.
+        """
+        params = {'limit': bound}  # Requesting a limit of 5 results
+        response = requests.get(self.BASE_URL, headers=self.headers, params=params)
+        assert response.status_code == 200
+        api_response = self._parse_response(response)
+        assert len(api_response.data) == bound, f"Set upper bound:{bound}"
+
+    def test_invalid_limit_negative(self):
+        """
+        Negative Test: Verifies that the API returns a 400 error with the correct message when the 'limit' parameter is -1.
+        """
+        params = {'limit': -1}
+        response = requests.get(self.BASE_URL, headers=self.headers, params=params)
+        assert response.status_code == 400
+        error_response = self._parse_response(response)
+        assert isinstance(error_response, CoinCapAPIErrorResponse)
+        assert error_response.error == "limit/offset cannot be negative"
+
+    def test_invalid_limit_exceed_upperbound(self):
+        """
+        Negative Test: Verifies that the API returns a 400 error with the correct message when the 'limit' parameter exceeds 2000.
+        """
+        params = {'limit': 2001}
+        response = requests.get(self.BASE_URL, headers=self.headers, params=params)
+        assert response.status_code == 400
+        error_response = self._parse_response(response)
+        assert isinstance(error_response, CoinCapAPIErrorResponse)
+        assert error_response.error == "limit exceeds 2000"
